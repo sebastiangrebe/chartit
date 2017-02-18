@@ -2,14 +2,16 @@
   "name": "chartit",
   "version": "0.0.0-development",
   "description": "Charting Library",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "commit": "git-cz",
-    "test": "mocha src/index.test.js -w",
-    "test:single": "istanbul cover -x *.test.js _mocha -- -R spec src/index.test.js",
-    "check-coverage": "istanbul check-coverage --statements --branches --function 50 --lines 100",
+    "watch:test": "npm t -- -w",
+    "test": "mocha src/index.test.js --compilers js:babel-register",
+    "check-coverage": "nyc check-coverage --statements --branches --function 50 --lines 100",
     "report-coverage": "cat ./coverage/lcov.info | codecov",
-    "build:main": "",
+    "cover": "nyc npm t",
+    "prebuild": "rimraf dist",
+    "build:main": "babel --copy-files --out-dir dist --ignore *.test.js src",
     "build:umd": "webpack --output-filename index.umd.js",
     "build:umd.min": "webpack --output-filename index.umd.min.js -p",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
@@ -23,6 +25,10 @@
     "graph",
     "svg"
   ],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "author": "Sebastian Grebe <sebigrebe@gmail.com> (http://sebastian-grebe.com/)",
   "license": "MIT",
   "homepage": "https://github.com/Sebi55/chartit",
@@ -30,8 +36,11 @@
     "d3": "4.5.0"
   },
   "devDependencies": {
+    "babel-cli": "6.23.0",
     "babel-core": "6.23.1",
     "babel-loader": "6.3.2",
+    "babel-preset-es2015": "6.22.0",
+    "babel-preset-stage-2": "6.22.0",
     "chai": "3.5.0",
     "codecov.io": "0.1.6",
     "commitizen": "2.9.6",
@@ -39,15 +48,19 @@
     "ghooks": "2.0.0",
     "istanbul": "0.4.5",
     "mocha": "3.2.0",
+    "rimraf": "2.5.4",
     "semantic-release": "^6.3.2",
     "webpack": "2.2.1"
   },
-  "czConfig": {
-    "path": "node_modules/cz-conventional-changelog"
-  },
   "config": {
     "ghooks": {
-      "pre-commit": "npm run test:single && npm run check-coverage"
+      "pre-commit": "npm run cover && npm run check-coverage"
+    },
+    "commitizen": {
+      "path": "node_modules/cz-conventional-changelog"
     }
+  },
+  "babel":{
+    "presets": ["es2015", "stage-2"]
   }
 }
