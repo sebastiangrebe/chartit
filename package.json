@@ -7,6 +7,8 @@
     "commit": "git-cz",
     "test": "mocha src/index.test.js -w",
     "test:single": "istanbul cover -x *.test.js _mocha -- -R spec src/index.test.js",
+    "check-coverage": "istanbul check-coverage --statements --branches --function 50 --lines 100",
+    "report-coverage": "cat ./coverage/lcov.info | codecov",
     "build:main": "",
     "build:umd": "webpack --output-filename index.umd.js",
     "build:umd.min": "webpack --output-filename index.umd.min.js -p",
@@ -31,6 +33,7 @@
     "babel-core": "6.23.1",
     "babel-loader": "6.3.2",
     "chai": "3.5.0",
+    "codecov.io": "0.1.6",
     "commitizen": "2.9.6",
     "cz-conventional-changelog": "1.2.0",
     "ghooks": "2.0.0",
@@ -44,7 +47,7 @@
   },
   "config": {
     "ghooks": {
-      "pre-commit": "npm run test:single"
+      "pre-commit": "npm run test:single && npm run check-coverage"
     }
   }
 }
