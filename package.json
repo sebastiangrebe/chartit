@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://Sebi55@bitbucket.org/Sebi55/chartit.git"
+    "url": "git+https://github.com/Sebi55/chartit.git"
   },
   "keywords": [
     "chart",
@@ -20,7 +20,7 @@
   ],
   "author": "Sebastian Grebe <sebigrebe@gmail.com> (http://sebastian-grebe.com/)",
   "license": "MIT",
-  "homepage": "https://bitbucket.org/Sebi55/chartit#readme",
+  "homepage": "https://github.com/Sebi55/chartit",
   "dependencies": {
     "d3": "4.5.0"
   },
