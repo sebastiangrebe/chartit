@@ -1,17 +1,19 @@
 {
   "name": "chartit",
-  "version": "1.0.0",
+  "version": "0.0.0-development",
   "description": "Charting Library",
   "main": "src/index.js",
   "scripts": {
+    "commit": "git-cz",
     "test": "mocha src/index.test.js -w",
     "build:main": "",
     "build:umd": "webpack --output-filename index.umd.js",
-    "build:umd.min": "webpack --output-filename index.umd.min.js -p"
+    "build:umd.min": "webpack --output-filename index.umd.min.js -p",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Sebi55/chartit.git"
+    "url": "https://github.com/Sebi55/chartit.git"
   },
   "keywords": [
     "chart",
@@ -28,7 +30,13 @@
     "babel-core": "6.23.1",
     "babel-loader": "6.3.2",
     "chai": "3.5.0",
+    "commitizen": "2.9.6",
+    "cz-conventional-changelog": "1.2.0",
     "mocha": "3.2.0",
+    "semantic-release": "^6.3.2",
     "webpack": "2.2.1"
+  },
+  "czConfig": {
+    "path": "node_modules/cz-conventional-changelog"
   }
 }
