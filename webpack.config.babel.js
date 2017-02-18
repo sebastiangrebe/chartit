@@ -4,7 +4,7 @@ const include = join(__dirname,'src');
 
 export default {
     entry: './src/index',
-    ouput: {
+    output: {
         path: join(__dirname, 'dist'),
         libraryTarget: 'umd',
         library: 'chartit'
@@ -12,7 +12,7 @@ export default {
     devtool: 'source-map',
     module: {
         loaders: [
-            {test: /\.js$/,loader: 'babel', include}
+            {test: /\.js$/,loader: 'babel-loader', include}
         ]
     }
 }
