@@ -1,0 +1,34 @@
+{
+  "name": "chartit",
+  "version": "1.0.0",
+  "description": "Charting Library",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "mocha src/index.test.js -w",
+    "build:main": "",
+    "build:umd": "webpack --output-filename index.umd.js",
+    "build:umd.min": "webpack --output-filename index.umd.min.js -p"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://Sebi55@bitbucket.org/Sebi55/chartit.git"
+  },
+  "keywords": [
+    "chart",
+    "graph",
+    "svg"
+  ],
+  "author": "Sebastian Grebe <sebigrebe@gmail.com> (http://sebastian-grebe.com/)",
+  "license": "MIT",
+  "homepage": "https://bitbucket.org/Sebi55/chartit#readme",
+  "dependencies": {
+    "d3": "4.5.0"
+  },
+  "devDependencies": {
+    "babel-core": "6.23.1",
+    "babel-loader": "6.3.2",
+    "chai": "3.5.0",
+    "mocha": "3.2.0",
+    "webpack": "2.2.1"
+  }
+}
