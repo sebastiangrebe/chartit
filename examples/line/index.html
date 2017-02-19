@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="../../dist/index.umd.js" type="text/javascript"></script>
+        <style>
+            div#chart{
+                width:400px;
+                height:400px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="chart"></div>
+        <script type="text/javascript">
+            var config={
+                grid:{
+                    padding:{
+                        left:5
+                    }
+                }
+            };
+            var chart=new chartit(config);
+            console.log(chart);
+        </script>
+    </body>    
+</html>
