@@ -1,5 +1,7 @@
-var DEFAULT_CONFIG={
-    
+var DEFAULT_CONFIG = { 
+    grid: {
+
+    }
 }
 
 module.exports={
