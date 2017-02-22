@@ -3,6 +3,7 @@
 var DEFAULT_CONFIG = {
     root: null,
     grid: {
+        show:true,
         padding: {
             top: 0,
             right: 0,
@@ -23,8 +24,9 @@ var DEFAULT_CONFIG = {
             size: 400
         }
     ],
-    width: 400,
-    height: 400,
+    resize:true,
+    width: null,
+    height: null,
     margin: {
         top: 20,
         right: 20,
@@ -37,8 +39,16 @@ var DEFAULT_CONFIG = {
     },
     animation: {
         show: true,
+        animate: true,
         time: 1000,
         type: 'easeLinear'
+    },
+    hooks:{
+        animateStart:function(d){
+        },
+        animateEnd:function(){
+
+        }
     }
 };
 
@@ -51,29 +61,106 @@ class chartit {
     }
 
     draw(data) {
-        this.data = data;
-        this.ranges = this.ranges();
-        this.container = d3.select(this.config.root).append("svg")
-            .attr("width", this.config.width + this.config.margin.left + this.config.margin.right)
-            .attr("height", this.config.height + this.config.margin.top + this.config.margin.bottom);
-        this.drawAxis();
-        this.config.anim = d3.transition()
-            .duration(this.config.animation.time)
-            .ease(d3[this.config.animation.type])
-            .on("start", function (d) { //EVENT 
-            })
-            .on("end", function (d) { //EVENT
-            });
-        if (this.config.type === 'line') {
-            this.drawLines();
+        var self=this;
+        if(typeof data!== typeof undefined){
+            self.data = data;
         }
+        self.ranges = self.getRanges();
+        var dimensions=this.getDimensions();
+        if(self.config.resize===true){
+            this.setResizeEvent();
+        }
+        self.svg = d3.select(self.config.root).append("svg")
+            .attr("width", dimensions.width)
+            .attr("height", dimensions.height);
+        self.container=self.svg.append("svg:g").attr("transform", "translate(0,0)");
+        self.drawAxis();
+        if(self.config.animation.show===true){
+            self.config.anim = d3.transition()
+            .duration(self.config.animation.time)
+            .ease(d3[self.config.animation.type])
+            .on("start", function(d){self.config.hooks.animateStart(d)})
+            .on("end", function(d){self.config.hooks.animateEnd(d)});
+        }
+        if (self.config.type === 'line') {
+            self.drawLines();
+        }
+    }
+
+    getDimensions() {
+        var self=this;
+        if(self.config.resize===true){
+
+            var width=document.querySelector(self.config.root).clientWidth;
+            self.config.width=width;
+        
+            var height=document.querySelector(self.config.root).clientHeight;
+            self.config.height=height;
+      
+        }else{
+            if(self.config.width===null){
+                var width=document.querySelector(self.config.root).clientWidth;
+                self.config.width=width;
+            }else{
+                var width=self.config.width;
+            }
+            if(self.config.height===null){
+                var height=document.querySelector(self.config.root).clientHeight;
+                self.config.height=height;
+            }else{
+                var height=self.config.height;
+            }
+        }
+        return {height:height,width:width};
+    }
+
+    update(data){
+        var self=this;
+        if(typeof data!== typeof undefined){
+            self.data = data;
+            self.config.animation.animate=true;
+        }else{
+            self.config.animation.animate=false;
+        }
+        self.ranges = self.getRanges();
+        var dimensions=this.getDimensions();
+        self.svg
+            .attr("width", dimensions.width)
+            .attr("height", dimensions.height);
+        self.drawAxis();
+        if (self.config.type === 'line') {
+            self.drawLines();
+        }
+    }
+
+    setResizeEvent() {
+        var self=this;
+        var resizeTimer;
+        var interval = Math.floor(1000 / 60 * 10);
+         
+        window.addEventListener('resize', function (event) {
+            if (resizeTimer !== false) {
+                clearTimeout(resizeTimer);
+            }
+            resizeTimer = setTimeout(function () {
+                self.update()
+            }, interval);
+        });
     }
 
     drawLines() {
         var self = this;
+        var lines=self.container.selectAll(".line");
+        var redraw=false;
+
+        if(typeof this.lines!==typeof undefined && this.lines.length){
+            redraw=true;
+        }else{
+            this.lines=[];
+        }
         for (var j = 0; j < self.data.length; j++) {
-            var x = self.ranges[0].axis;
-            var y = self.ranges[1].axis;
+            var x = self.ranges[0].axisScale;
+            var y = self.ranges[1].axisScale;
             var line = d3.line()
                 /*
                 Multiple DataRows > 2
@@ -87,48 +174,82 @@ class chartit {
                     return y(d[1]) + self.config.margin.bottom;
                 });
             var item = self.data[j];
-            self.container
-                .append("svg:path")
-                .attr("fill", "none")
+            
+            if(!redraw){
+                var linet=self.container;
+                linet=linet.append("svg:path");
+                this.lines[j]=linet;
+            }else{
+                var linet=this.lines[j];
+            }
+                linet.attr("fill", "none")
                 .attr("stroke", self.config.color.stroke)
-                .attr("d", line(item)).classed("line", true)
-                .attr("stroke-dasharray", function (d) {
+                .attr("d", line(item)).classed("line", true).attr("stroke-dasharray", function (d) {
                     return this.getTotalLength()
                 })
                 .attr("stroke-dashoffset", function (d) {
                     return this.getTotalLength()
-                });
+                })
         }
-        self.container.selectAll(".line").transition(this.config.anim)
-            .attr("stroke-dashoffset", 0);
+  
+        if(self.config.animation.show===true&&self.config.animation.animate===true){
+            self.container.selectAll(".line").transition(this.config.anim)
+                .attr("stroke-dashoffset", 0);
+        }else{
+            self.container.selectAll(".line")
+                .attr("stroke-dashoffset", 0);
+        }
     }
 
     drawAxis() {
         //TODO Minus Offset
         var svgContainer = this.container;
         for (var i = 0; i < this.ranges.length; i++) {
+            var redraw=false;
+            if(typeof this.config.axis[i].axisGroup !== typeof undefined){
+                redraw=true;
+            }
             switch (i) {
                 case 0:
                     var axisScale = d3.scaleLinear()
                         .domain([this.ranges[i].min, this.ranges[i].max])
-                        .range([this.ranges[i].min, this.config.axis[i].size]);
+                        .range([0, this.config.width]);
                     var axis = d3.axisBottom()
                         .scale(axisScale);
-                    var AxisGroup = svgContainer
-                        .append("g").attr("class", "x axis")
-                        .attr("transform", "translate(" + this.config.margin.left + "," + (this.config.axis[i].size + this.config.margin.right) + ")")
+                    if(!redraw){
+                        var AxisGroup = svgContainer
+                            .append("g");
+                        this.config.axis[i].axisGroup = AxisGroup;
+                        
+                    }else{
+                        var AxisGroup = this.config.axis[i].axisGroup;
+                    }
+                    
+                    AxisGroup.attr("class", "x axis")
                         .call(axis);
+
+                    var bounding=AxisGroup._groups[0][0].getBBox();
+                    this.config.axis[i].bounding = bounding;
+                    
                     break;
                 case 1:
                     var axisScale = d3.scaleLinear()
                         .domain([this.ranges[i].max, this.ranges[i].min])
-                        .range([this.ranges[i].min, this.config.axis[i].size]);
+                        .range([0, this.config.height]);
                     var axis = d3.axisLeft()
                         .scale(axisScale);
-                    var AxisGroup = svgContainer
-                        .append("g").attr("class", "x axis")
-                        .attr("transform", "translate(" + this.config.margin.left + "," + (this.config.margin.top) + ")")
+                    if(!redraw){
+                        var AxisGroup = svgContainer
+                            .append("g");
+                        this.config.axis[i].axisGroup = AxisGroup;
+                    }else{
+                        var AxisGroup = this.config.axis[i].axisGroup;
+                    }
+                    AxisGroup
+                        .attr("class", "y axis")
                         .call(axis);
+                    var bounding=AxisGroup._groups[0][0].getBBox();
+                    this.config.axis[i].bounding = bounding;
                     break;
                     //TODO
                 case 2:
@@ -137,8 +258,14 @@ class chartit {
                         .range([this.ranges[i].min, this.config.axis[i].size]);
                     var axis = d3.axisRight()
                         .scale(axisScale);
-                    var AxisGroup = svgContainer
-                        .append("g").attr("class", "x axis")
+                    if(!redraw){
+                        var AxisGroup = svgContainer
+                            .append("g");
+                        this.config.axis[i].axisGroup = AxisGroup;
+                    }else{
+                        var AxisGroup = this.config.axis[i].axisGroup;
+                    }
+                    AxisGroup.attr("class", "x axis")
                         .attr("transform", "translate(0," + this.config.axis[i].size + ")")
                         .call(axis);
                     break;
@@ -154,11 +281,61 @@ class chartit {
                         .call(axis);
                     break;
             }
-            this.ranges[i].axis = axisScale;
+            this.ranges[i].axisScale = axisScale;
+            this.ranges[i].axis = axis;
+        }
+        this.innerHeight=this.height;
+        this.innerWidth=this.width;
+        this.axisLeft=0;
+        this.axisBottom=0;
+        for (var i = 0; i < this.ranges.length; i++) {
+            var AxisGroup = this.config.axis[i].axisGroup;
+            switch (i) {
+                case 0:
+                        var axisLeft=this.config.axis[i+1].bounding.width;
+                        var axisBottom=this.config.axis[i].bounding.height;
+                        this.axisBottom+=axisBottom;
+                        this.innerHeight-=axisBottom;
+                        break;
+                case 1:
+                        var axisLeft=this.config.axis[i].bounding.width;
+                        var axisBottom=this.config.axis[i-1].bounding.height;
+                        this.axisLeft+=axisLeft;
+                        this.innerWidth-=axisLeft;
+                        case 2:
+                    
+                    break;
+                case 3:
+                    
+                    break;
+            }
+        }
+        for (var i = 0; i < this.ranges.length; i++) {
+            var AxisGroup = this.config.axis[i].axisGroup;
+            switch (i) {
+                case 0:
+                        this.ranges[i].axisScale=this.ranges[i].axisScale.range([this.axisLeft, this.config.width-(this.config.margin.left+this.axisLeft)]);
+                        this.ranges[i].axis = d3.axisBottom()
+                        .scale(this.ranges[i].axisScale);
+                        AxisGroup.attr("transform", "translate(" + (this.config.margin.left) + "," + (this.config.margin.top-this.axisBottom+this.config.height) + ")").call(this.ranges[i].axis);
+                    break;
+                case 1:
+                        this.ranges[i].axisScale=this.ranges[i].axisScale.range([this.axisBottom/2, this.config.height-(this.config.margin.top+this.axisBottom)]);
+                        this.ranges[i].axis = d3.axisLeft()
+                        .scale(this.ranges[i].axisScale);
+                        AxisGroup.attr("transform", "translate(" + (this.config.margin.left+this.axisLeft) + "," + (this.config.margin.top) + ")").call(this.ranges[i].axis);
+                    //TODO
+                case 2:
+                    
+                    break;
+                case 3:
+                    
+                    break;
+            }
         }
     }
 
-    ranges() {
+    getRanges() {
         var ranges = [];
         for (var i = 0; i < this.config.axis.length; i++) {
             var min = this.config.axis[i].min;
