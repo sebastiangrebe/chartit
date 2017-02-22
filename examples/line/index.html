@@ -21,6 +21,7 @@
                         left:5
                     }
                 },
+                resizeTimeout: 0,
                 axis:[
                     {
                         min: 'auto',
@@ -42,11 +43,11 @@
                     left:0
                 }
             };
-            var data=[[
+            var data=[{data:[
                 [1,4],[2,2],[3,3]
-            ],[
+            ],dot:{type:'circle',width:3.5}},{data:[
                 [3,7],[1,4],[6,3]
-            ]];
+            ],dot:{type:'image',image:"http://www.freeiconspng.com/uploads/circle-png-7.png",width:20,height:20}}];
             var chart=new chartit(config);
             chart.draw(data);
         </script>
