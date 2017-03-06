@@ -35,9 +35,6 @@ var DEFAULT_CONFIG = {
         left: 25
     },
     type: 'line',
-    color: {
-        stroke: "#000"
-    },
     animation: {
         show: true,
         animate: true,
@@ -55,16 +52,14 @@ var DEFAULT_CONFIG = {
 class chartit {
 
     constructor(config) {
-        var config = this.mergeDeep(DEFAULT_CONFIG, config);
-        this.config = config;
+        var ini_config = this.mergeDeep(DEFAULT_CONFIG, config);
+        this.config = ini_config;
         this.data = [];
+        this.drawn=false;
     }
 
     draw(data) {
         var self = this;
-        if (typeof self.drawn === typeof undefined) {
-            self.drawn = false;
-        }
         if (typeof data !== typeof undefined) {
             self.data = data;
         }
@@ -98,26 +93,29 @@ class chartit {
 
     getDimensions() {
         var self = this;
+        var width;
+        var height;
         if (self.config.resize === true) {
 
-            var width = document.querySelector(self.config.root).clientWidth;
+            width = document.querySelector(self.config.root).clientWidth;
             self.config.width = width;
 
-            var height = document.querySelector(self.config.root).clientHeight;
+            height = document.querySelector(self.config.root).clientHeight;
             self.config.height = height;
 
         } else {
             if (self.config.width === null) {
-                var width = document.querySelector(self.config.root).clientWidth;
+                width = document.querySelector(self.config.root).clientWidth;
                 self.config.width = width;
             } else {
-                var width = self.config.width;
+                width = self.config.width;
             }
+        
             if (self.config.height === null) {
-                var height = document.querySelector(self.config.root).clientHeight;
+                height = document.querySelector(self.config.root).clientHeight;
                 self.config.height = height;
             } else {
-                var height = self.config.height;
+                height = self.config.height;
             }
         }
         return {
@@ -162,84 +160,57 @@ class chartit {
     }
 
     drawDots() {
+
         var self = this;
         var dots = self.container.selectAll(".dot");
-        var redraw = false;
         var x = self.ranges[0].axisScale;
         var y = self.ranges[1].axisScale;
-        if (!self.drawn) {
+        
 
-            redraw = true;
-
-            for (var j = 0; j < self.data.length; j++) {
-                if (typeof self.data[j].dot !== typeof undefined && self.data[j].dot.type === "image" && self.data[j].dot.image !== "") {
-                    self.container.selectAll("dot")
-                        .data(self.data[j].data)
+        for (var j = 0; j < self.data.length; j++) {
+            if (!self.drawn) {
+                var temp = self.container.selectAll("dot");
+            }else{
+                var temp = self.container.selectAll(".dot");
+            }
+            if (typeof self.data[j].dot !== typeof undefined && self.data[j].dot.type === "image" && self.data[j].dot.image !== "") { 
+                if (!self.drawn) {
+                    temp = temp.data(self.data[j].data)
                         .enter().append("svg:image").attr('class', 'dot')
                         .attr("xlink:href", self.data[j].dot.image)
-                        .attr("width", self.data[j].dot.width)
-                        .attr("height", self.data[j].dot.height)
-                        .attr("x", function (d) {
-                            return x(d[0]) - self.data[j].dot.width / 2;
-                        })
-                        .attr("y", function (d) {
-                            return y(d[1]) - self.data[j].dot.height / 2;
-                        });
-                } else {
-                    self.container.selectAll("dot")
-                        .data(self.data[j].data)
+                }
+                temp.attr("width", self.data[j].dot.width)
+                    .attr("height", self.data[j].dot.height)
+                    .attr("x", function (d) {
+                        return x(d[0]) - self.data[j].dot.width / 2;
+                    })
+                    .attr("y", function (d) {
+                        return y(d[1]) - self.data[j].dot.height / 2;
+                    });
+            } else {
+                if (!self.drawn) {
+                    temp=temp.data(self.data[j].data)
                         .enter().append(self.data[j].dot.type).attr('class', 'dot')
-                        .attr("r", self.data[j].dot.width)
-                        .attr("cx", function (d) {
-                            return x(d[0]);
-                        })
-                        .attr("cy", function (d) {
-                            return y(d[1]);
-                        });
                 }
+                temp.attr("r", self.data[j].dot.width)
+                    .attr("cx", function (d) {
+                        return x(d[0]);
+                    })
+                    .attr("cy", function (d) {
+                        return y(d[1]);
+                    });
             }
-        } else {
-            for (var j = 0; j < self.data.length; j++) {
-                if (typeof self.data[j].dot !== typeof undefined && self.data[j].dot.type === "image" && self.data[j].dot.image !== "") {
-                    self.container.selectAll('.dot')
-                        .attr("width", self.data[j].dot.width)
-                        .attr("height", self.data[j].dot.height)
-                        .attr("x", function (d) {
-                            return x(d[0]) - self.data[j].dot.width / 2;
-                        })
-                        .attr("y", function (d) {
-                            return y(d[1]) - self.data[j].dot.height / 2;
-                        });
-                } else {
-                    self.container.selectAll('.dot')
-                        .attr("r", function (d) {
-                            return self.data[j].dot.width
-                        })
-                        .attr("cx", function (d) {
-                            return x(d[0]);
-                        })
-                        .attr("cy", function (d) {
-                            return y(d[1]);
-                        })
-                }
-            }
-
         }
-
     }
 
     drawLines() {
         var self = this;
         var lines = self.container.selectAll(".line");
-        var redraw = false;
-
-        if (typeof this.lines !== typeof undefined && this.lines.length) {
-            redraw = true;
-        } else {
-            this.lines = [];
-        }
         var x = self.ranges[0].axisScale;
         var y = self.ranges[1].axisScale;
+        if (!self.drawn) {
+            this.lines = []; 
+        }
         for (var j = 0; j < self.data.length; j++) {
             var line = d3.line()
                 /*
@@ -255,15 +226,21 @@ class chartit {
                 });
             var item = self.data[j].data;
 
-            if (!redraw) {
+            if (!self.drawn) {
                 var linet = self.container;
                 linet = linet.append("svg:path");
                 this.lines[j] = linet;
             } else {
                 var linet = this.lines[j];
             }
+            if (typeof self.data[j].color !== typeof undefined) {
+                var color = self.data[j].color;
+            } else {
+                var color = "#000";
+            }
+
             linet.attr("fill", "none")
-                .attr("stroke", self.config.color.stroke)
+                .attr("stroke", color)
                 .attr("d", line(item)).classed("line", true).attr("stroke-dasharray", function (d) {
                     return this.getTotalLength()
                 })
@@ -282,85 +259,48 @@ class chartit {
     }
 
     drawAxis() {
-        //TODO Minus Offset
+        //TODO Minus 
         var svgContainer = this.container;
         for (var i = 0; i < this.ranges.length; i++) {
-            var redraw = false;
-            if (typeof this.config.axis[i].axisGroup !== typeof undefined) {
-                redraw = true;
+            var axisScale = d3.scaleLinear();
+            if (!this.drawn) {
+                var AxisGroup = svgContainer
+                    .append("g");
+                this.config.axis[i].axisGroup = AxisGroup;
+            } else {
+                var AxisGroup = this.config.axis[i].axisGroup;
             }
             switch (i) {
                 case 0:
-                    var axisScale = d3.scaleLinear()
+                    axisScale = axisScale
                         .domain([this.ranges[i].min, this.ranges[i].max])
                         .range([0, this.config.width]);
                     var axis = d3.axisBottom()
                         .scale(axisScale);
-                    if (!redraw) {
-                        var AxisGroup = svgContainer
-                            .append("g");
-                        this.config.axis[i].axisGroup = AxisGroup;
-
-                    } else {
-                        var AxisGroup = this.config.axis[i].axisGroup;
-                    }
 
                     AxisGroup.attr("class", "x axis")
                         .call(axis);
-
-                    var bounding = AxisGroup._groups[0][0].getBBox();
-                    this.config.axis[i].bounding = bounding;
-
                     break;
                 case 1:
-                    var axisScale = d3.scaleLinear()
+                    axisScale = axisScale
                         .domain([this.ranges[i].max, this.ranges[i].min])
                         .range([0, this.config.height]);
                     var axis = d3.axisLeft()
                         .scale(axisScale);
-                    if (!redraw) {
-                        var AxisGroup = svgContainer
-                            .append("g");
-                        this.config.axis[i].axisGroup = AxisGroup;
-                    } else {
-                        var AxisGroup = this.config.axis[i].axisGroup;
-                    }
                     AxisGroup
                         .attr("class", "y axis")
                         .call(axis);
-                    var bounding = AxisGroup._groups[0][0].getBBox();
-                    this.config.axis[i].bounding = bounding;
                     break;
                     //TODO
                 case 2:
-                    var axisScale = d3.scaleLinear()
-                        .domain([this.ranges[i].min, this.ranges[i].max])
-                        .range([this.ranges[i].min, this.config.axis[i].size]);
-                    var axis = d3.axisRight()
-                        .scale(axisScale);
-                    if (!redraw) {
-                        var AxisGroup = svgContainer
-                            .append("g");
-                        this.config.axis[i].axisGroup = AxisGroup;
-                    } else {
-                        var AxisGroup = this.config.axis[i].axisGroup;
-                    }
-                    AxisGroup.attr("class", "x axis")
-                        .attr("transform", "translate(0," + this.config.axis[i].size + ")")
-                        .call(axis);
+
                     break;
                 case 3:
-                    var axisScale = d3.scaleLinear()
-                        .domain([this.ranges[i].min, this.ranges[i].max])
-                        .range([this.ranges[i].min, this.config.axis[i].size]);
-                    var axis = d3.axisTop()
-                        .scale(axisScale);
-                    var AxisGroup = svgContainer
-                        .append("g").attr("class", "x axis")
-                        .attr("transform", "translate(0,0)")
-                        .call(axis);
+                
                     break;
             }
+            var bounding = AxisGroup._groups[0][0].getBBox();
+            this.config.axis[i].bounding = bounding;
             this.ranges[i].axisScale = axisScale;
             this.ranges[i].axis = axis;
         }
@@ -369,7 +309,6 @@ class chartit {
         this.axisLeft = 0;
         this.axisBottom = 0;
         for (var i = 0; i < this.ranges.length; i++) {
-            var AxisGroup = this.config.axis[i].axisGroup;
             switch (i) {
                 case 0:
                     var axisLeft = this.config.axis[i + 1].bounding.width;
@@ -382,11 +321,6 @@ class chartit {
                     var axisBottom = this.config.axis[i - 1].bounding.height;
                     this.axisLeft += axisLeft;
                     this.innerWidth -= axisLeft;
-                case 2:
-
-                    break;
-                case 3:
-
                     break;
             }
         }
@@ -404,12 +338,6 @@ class chartit {
                     this.ranges[i].axis = d3.axisLeft()
                         .scale(this.ranges[i].axisScale);
                     AxisGroup.attr("transform", "translate(" + (this.config.margin.left + this.axisLeft) + "," + (this.config.margin.top) + ")").call(this.ranges[i].axis);
-                    //TODO
-                case 2:
-
-                    break;
-                case 3:
-
                     break;
             }
         }
