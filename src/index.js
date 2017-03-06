@@ -168,10 +168,11 @@ class chartit {
         
 
         for (var j = 0; j < self.data.length; j++) {
+            var temp;
             if (!self.drawn) {
-                var temp = self.container.selectAll("dot");
+                temp = self.container.selectAll("dot");
             }else{
-                var temp = self.container.selectAll(".dot");
+                temp = self.container.selectAll(".dot");
             }
             if (typeof self.data[j].dot !== typeof undefined && self.data[j].dot.type === "image" && self.data[j].dot.image !== "") { 
                 if (!self.drawn) {
@@ -225,18 +226,18 @@ class chartit {
                     return y(d[1]) + self.config.margin.bottom;
                 });
             var item = self.data[j].data;
-
+            var linet;
             if (!self.drawn) {
-                var linet = self.container;
-                linet = linet.append("svg:path");
+                var linet = self.container.append("svg:path");
                 this.lines[j] = linet;
             } else {
                 var linet = this.lines[j];
             }
+            var color;
             if (typeof self.data[j].color !== typeof undefined) {
-                var color = self.data[j].color;
+                color = self.data[j].color;
             } else {
-                var color = "#000";
+                color = "#000";
             }
 
             linet.attr("fill", "none")
@@ -259,23 +260,25 @@ class chartit {
     }
 
     drawAxis() {
-        //TODO Minus 
         var svgContainer = this.container;
-        for (var i = 0; i < this.ranges.length; i++) {
+        var i=0;
+        for (; i < this.ranges.length; i++) {
             var axisScale = d3.scaleLinear();
+            var AxisGroup;
             if (!this.drawn) {
-                var AxisGroup = svgContainer
+                AxisGroup = svgContainer
                     .append("g");
                 this.config.axis[i].axisGroup = AxisGroup;
             } else {
-                var AxisGroup = this.config.axis[i].axisGroup;
+                AxisGroup = this.config.axis[i].axisGroup;
             }
+            var axis;
             switch (i) {
                 case 0:
                     axisScale = axisScale
                         .domain([this.ranges[i].min, this.ranges[i].max])
                         .range([0, this.config.width]);
-                    var axis = d3.axisBottom()
+                    axis = d3.axisBottom()
                         .scale(axisScale);
 
                     AxisGroup.attr("class", "x axis")
@@ -285,13 +288,12 @@ class chartit {
                     axisScale = axisScale
                         .domain([this.ranges[i].max, this.ranges[i].min])
                         .range([0, this.config.height]);
-                    var axis = d3.axisLeft()
+                    axis = d3.axisLeft()
                         .scale(axisScale);
                     AxisGroup
                         .attr("class", "y axis")
                         .call(axis);
                     break;
-                    //TODO
                 case 2:
 
                     break;
@@ -308,7 +310,7 @@ class chartit {
         this.innerWidth = this.width;
         this.axisLeft = 0;
         this.axisBottom = 0;
-        for (var i = 0; i < this.ranges.length; i++) {
+        for (i = 0; i < this.ranges.length; i++) {
             switch (i) {
                 case 0:
                     var axisLeft = this.config.axis[i + 1].bounding.width;
@@ -324,7 +326,7 @@ class chartit {
                     break;
             }
         }
-        for (var i = 0; i < this.ranges.length; i++) {
+        for (i = 0; i < this.ranges.length; i++) {
             var AxisGroup = this.config.axis[i].axisGroup;
             switch (i) {
                 case 0:
