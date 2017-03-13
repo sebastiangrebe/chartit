@@ -79,7 +79,7 @@ class chartit {
         self.container = self.svg.append("svg:g").attr("transform", "translate(0,0)");
 
         self.update(data);
-        
+
         self.drawn=true;
     }
 
@@ -288,41 +288,25 @@ class chartit {
         this.innerWidth = this.width;
         this.axisLeft = 0;
         this.axisBottom = 0;
-        var axisLeft;
-        var axisBottom;
-        for (i = 0; i < this.ranges.length; i++) {
-            switch (i) {
-                case 0:
-                    axisLeft = this.config.axis[i + 1].bounding.width;
-                    axisBottom = this.config.axis[i].bounding.height;
-                    this.axisBottom += axisBottom;
-                    this.innerHeight -= axisBottom;
-                    break;
-                case 1:
-                    axisLeft = this.config.axis[i].bounding.width;
-                    axisBottom = this.config.axis[i - 1].bounding.height;
-                    this.axisLeft += axisLeft;
-                    this.innerWidth -= axisLeft;
-                    break;
-            }
-        }
-        for (i = 0; i < this.ranges.length; i++) {
-            AxisGroup = this.config.axis[i].axisGroup;
-            switch (i) {
-                case 0:
-                    this.ranges[i].axisScale = this.ranges[i].axisScale.range([this.axisLeft, this.width - (this.config.margin.left + this.axisLeft)]);
-                    this.ranges[i].axis = d3.axisBottom()
-                        .scale(this.ranges[i].axisScale);
-                    AxisGroup.attr("transform", "translate(" + (this.config.margin.left) + "," + (this.config.margin.top - this.axisBottom + this.height) + ")").call(this.ranges[i].axis);
-                    break;
-                case 1:
-                    this.ranges[i].axisScale = this.ranges[i].axisScale.range([this.axisBottom / 2, this.height - (this.config.margin.top + this.axisBottom)]);
-                    this.ranges[i].axis = d3.axisLeft()
-                        .scale(this.ranges[i].axisScale);
-                    AxisGroup.attr("transform", "translate(" + (this.config.margin.left + this.axisLeft) + "," + (this.config.margin.top) + ")").call(this.ranges[i].axis);
-                    break;
-            }
-        }
+        var axisLeft=this.config.axis[1].bounding.width;
+        var axisBottom=this.config.axis[0].bounding.height;
+        axisLeft += this.config.axis[1].bounding.width;
+        axisBottom += this.config.axis[0].bounding.height;
+        this.axisBottom += axisBottom;
+        this.innerHeight -= axisBottom;
+        this.axisLeft += axisLeft;
+        this.innerWidth -= axisLeft;
+        AxisGroup = this.config.axis[0].axisGroup;
+        this.ranges[0].axisScale = this.ranges[0].axisScale.range([this.axisLeft, this.width - (this.config.margin.left + this.axisLeft)]);
+        this.ranges[0].axis = d3.axisBottom()
+            .scale(this.ranges[0].axisScale);
+        AxisGroup.attr("transform", "translate(" + (this.config.margin.left) + "," + (this.config.margin.top - this.axisBottom + this.height) + ")").call(this.ranges[i].axis);
+        AxisGroup = this.config.axis[1].axisGroup;
+        this.ranges[1].axisScale = this.ranges[1].axisScale.range([this.axisBottom / 2, this.height - (this.config.margin.top + this.axisBottom)]);
+        this.ranges[1].axis = d3.axisLeft()
+            .scale(this.ranges[1].axisScale);
+        AxisGroup.attr("transform", "translate(" + (this.config.margin.left + this.axisLeft) + "," + (this.config.margin.top) + ")").call(this.ranges[i].axis);
+        
     }
 
     getRanges() {
