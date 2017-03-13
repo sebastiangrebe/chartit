@@ -64,16 +64,16 @@ class chartit {
             self.data = data;
         }
         self.ranges = self.getRanges();
-        var dimensions = this.getDimensions();
-        if (self.config.resize === true) {
+        this.getDimensions();
+        if (self.config.resize) {
             this.setResizeEvent();
         }
         self.svg = d3.select(self.config.root).append("svg")
-            .attr("width", dimensions.width)
-            .attr("height", dimensions.height);
+            .attr("width", self.width)
+            .attr("height", self.height);
         self.container = self.svg.append("svg:g").attr("transform", "translate(0,0)");
         self.drawAxis();
-        if (self.config.animation.show === true) {
+        if (self.config.animation.show) {
             self.config.anim = d3.transition()
                 .duration(self.config.animation.time)
                 .ease(d3[self.config.animation.type])
@@ -84,11 +84,28 @@ class chartit {
                     self.config.hooks.animateEnd(d)
                 });
         }
+        self.lines = []; 
         if (self.config.type === 'line') {
-            self.drawLines();
-            self.drawDots();
+            for (var i = 0; i < self.data.length; i++) {
+                self.drawDataRow(i);
+            }
         }
         self.drawn = true;
+    }
+
+    drawDataRow(j){
+        var self=this;
+        if(self.data[j].type==="line"){
+            self.drawLine(j);
+            self.drawDot(j);
+        }
+    }
+
+    drawGrid(){
+        var self = this;
+        if(self.grid.show){
+
+        }
     }
 
     getDimensions() {
@@ -98,30 +115,23 @@ class chartit {
         if (self.config.resize === true) {
 
             width = document.querySelector(self.config.root).clientWidth;
-            self.config.width = width;
-
             height = document.querySelector(self.config.root).clientHeight;
-            self.config.height = height;
 
         } else {
             if (self.config.width === null) {
                 width = document.querySelector(self.config.root).clientWidth;
-                self.config.width = width;
             } else {
                 width = self.config.width;
             }
         
             if (self.config.height === null) {
                 height = document.querySelector(self.config.root).clientHeight;
-                self.config.height = height;
             } else {
                 height = self.config.height;
             }
         }
-        return {
-            height: height,
-            width: width
-        };
+        self.width = width;
+        self.height = height;
     }
 
     update(data) {
@@ -133,14 +143,13 @@ class chartit {
             self.config.animation.animate = false;
         }
         self.ranges = self.getRanges();
-        var dimensions = this.getDimensions();
+        this.getDimensions();
         self.svg
-            .attr("width", dimensions.width)
-            .attr("height", dimensions.height);
+            .attr("width", self.width)
+            .attr("height", self.height);
         self.drawAxis();
-        if (self.config.type === 'line') {
-            self.drawLines();
-            self.drawDots();
+        for (var i = 0; i < self.data.length; i++) {
+            self.drawDataRow(i);
         }
     }
 
@@ -159,99 +168,83 @@ class chartit {
         });
     }
 
-    drawDots() {
+    drawDot(j) {
 
         var self = this;
-        var dots = self.container.selectAll(".dot");
+        var shapes = self.container.selectAll(".shape");
         var x = self.ranges[0].axisScale;
         var y = self.ranges[1].axisScale;
-        
-
-        for (var j = 0; j < self.data.length; j++) {
-            var temp;
+        var temp = self.container.selectAll("shape");
+        if (typeof self.data[j].shape !== typeof undefined && self.data[j].shape.type === "image" && self.data[j].shape.image !== "") { 
             if (!self.drawn) {
-                temp = self.container.selectAll("dot");
+                temp = temp.data(self.data[j].data)
+                    .enter().append("svg:image").attr('class', 'shape')
+                    .attr("xlink:href", self.data[j].shape.image)
             }else{
-                temp = self.container.selectAll(".dot");
+                temp = self.container.selectAll(".shape"); 
             }
-            if (typeof self.data[j].dot !== typeof undefined && self.data[j].dot.type === "image" && self.data[j].dot.image !== "") { 
-                if (!self.drawn) {
-                    temp = temp.data(self.data[j].data)
-                        .enter().append("svg:image").attr('class', 'dot')
-                        .attr("xlink:href", self.data[j].dot.image)
-                }
-                temp.attr("width", self.data[j].dot.width)
-                    .attr("height", self.data[j].dot.height)
-                    .attr("x", function (d) {
-                        return x(d[0]) - self.data[j].dot.width / 2;
-                    })
-                    .attr("y", function (d) {
-                        return y(d[1]) - self.data[j].dot.height / 2;
-                    });
-            } else {
-                if (!self.drawn) {
-                    temp=temp.data(self.data[j].data)
-                        .enter().append(self.data[j].dot.type).attr('class', 'dot')
-                }
-                temp.attr("r", self.data[j].dot.width)
-                    .attr("cx", function (d) {
-                        return x(d[0]);
-                    })
-                    .attr("cy", function (d) {
-                        return y(d[1]);
-                    });
+            temp.attr("width", self.data[j].shape.width)
+                .attr("height", self.data[j].shape.height)
+                .attr("x", function (d) {
+                    return x(d[0]) - self.data[j].shape.width / 2;
+                })
+                .attr("y", function (d) {
+                    return y(d[1]) - self.data[j].shape.height / 2;
+                });
+        } else {
+            if (!self.drawn) {
+                temp=temp.data(self.data[j].data)
+                    .enter().append(self.data[j].shape.type).attr('class', 'shape')
+            }else{
+                temp = self.container.selectAll(".shape"); 
             }
+            temp.attr("r", self.data[j].shape.width)
+                .attr("cx", function (d) {
+                    return x(d[0]);
+                })
+                .attr("cy", function (d) {
+                    return y(d[1]);
+                });
         }
     }
 
-    drawLines() {
+    drawLine(j) {
         var self = this;
         var lines = self.container.selectAll(".line");
         var x = self.ranges[0].axisScale;
         var y = self.ranges[1].axisScale;
+        var line = d3.line()
+            .x(function (d, i) {
+                return x(d[0]) + self.config.margin.left;
+            })
+            .y(function (d) {
+                return y(d[1]) + self.config.margin.bottom;
+            });
+        var item = self.data[j].data;
+        var linet;
         if (!self.drawn) {
-            this.lines = []; 
+            linet = self.container.append("svg:path");
+            self.lines[j] = linet;
+        } else {
+            linet = self.lines[j];
         }
-        for (var j = 0; j < self.data.length; j++) {
-            var line = d3.line()
-                /*
-                Multiple DataRows > 2
-                for(var i=0;i<this.this.data[j][k].length;i++){
-                    line.
-                }*/
-                .x(function (d, i) {
-                    return x(d[0]) + self.config.margin.left;
-                })
-                .y(function (d) {
-                    return y(d[1]) + self.config.margin.bottom;
-                });
-            var item = self.data[j].data;
-            var linet;
-            if (!self.drawn) {
-                var linet = self.container.append("svg:path");
-                this.lines[j] = linet;
-            } else {
-                var linet = this.lines[j];
-            }
-            var color;
-            if (typeof self.data[j].color !== typeof undefined) {
-                color = self.data[j].color;
-            } else {
-                color = "#000";
-            }
-
-            linet.attr("fill", "none")
-                .attr("stroke", color)
-                .attr("d", line(item)).classed("line", true).attr("stroke-dasharray", function (d) {
-                    return this.getTotalLength()
-                })
-                .attr("stroke-dashoffset", function (d) {
-                    return this.getTotalLength()
-                })
+        var color;
+        if (typeof self.data[j].color !== typeof undefined) {
+            color = self.data[j].color;
+        } else {
+            color = "#000";
         }
-
-        if (self.config.animation.show === true && self.config.animation.animate === true) {
-            self.container.selectAll(".line").transition(this.config.anim)
+        linet.attr("fill", "none")
+            .attr("stroke", color)
+            .attr("d", line(item)).classed("line", true).attr("stroke-dasharray", function (d) {
+                return this.getTotalLength()
+            })
+            .attr("stroke-dashoffset", function (d) {
+                return this.getTotalLength()
+            });
+        
+        if (self.config.animation.show && self.config.animation.animate) {
+            self.container.selectAll(".line").transition(self.config.anim)
                 .attr("stroke-dashoffset", 0);
         } else {
             self.container.selectAll(".line")
@@ -262,6 +255,7 @@ class chartit {
     drawAxis() {
         var svgContainer = this.container;
         var i=0;
+        
         for (; i < this.ranges.length; i++) {
             var axisScale = d3.scaleLinear();
             var AxisGroup;
@@ -277,28 +271,22 @@ class chartit {
                 case 0:
                     axisScale = axisScale
                         .domain([this.ranges[i].min, this.ranges[i].max])
-                        .range([0, this.config.width]);
+                        .range([0, this.width]);
                     axis = d3.axisBottom()
                         .scale(axisScale);
-
+                        
                     AxisGroup.attr("class", "x axis")
                         .call(axis);
                     break;
                 case 1:
                     axisScale = axisScale
                         .domain([this.ranges[i].max, this.ranges[i].min])
-                        .range([0, this.config.height]);
+                        .range([0, this.height]);
                     axis = d3.axisLeft()
                         .scale(axisScale);
                     AxisGroup
                         .attr("class", "y axis")
                         .call(axis);
-                    break;
-                case 2:
-
-                    break;
-                case 3:
-                
                     break;
             }
             var bounding = AxisGroup._groups[0][0].getBBox();
@@ -330,13 +318,13 @@ class chartit {
             var AxisGroup = this.config.axis[i].axisGroup;
             switch (i) {
                 case 0:
-                    this.ranges[i].axisScale = this.ranges[i].axisScale.range([this.axisLeft, this.config.width - (this.config.margin.left + this.axisLeft)]);
+                    this.ranges[i].axisScale = this.ranges[i].axisScale.range([this.axisLeft, this.width - (this.config.margin.left + this.axisLeft)]);
                     this.ranges[i].axis = d3.axisBottom()
                         .scale(this.ranges[i].axisScale);
-                    AxisGroup.attr("transform", "translate(" + (this.config.margin.left) + "," + (this.config.margin.top - this.axisBottom + this.config.height) + ")").call(this.ranges[i].axis);
+                    AxisGroup.attr("transform", "translate(" + (this.config.margin.left) + "," + (this.config.margin.top - this.axisBottom + this.height) + ")").call(this.ranges[i].axis);
                     break;
                 case 1:
-                    this.ranges[i].axisScale = this.ranges[i].axisScale.range([this.axisBottom / 2, this.config.height - (this.config.margin.top + this.axisBottom)]);
+                    this.ranges[i].axisScale = this.ranges[i].axisScale.range([this.axisBottom / 2, this.height - (this.config.margin.top + this.axisBottom)]);
                     this.ranges[i].axis = d3.axisLeft()
                         .scale(this.ranges[i].axisScale);
                     AxisGroup.attr("transform", "translate(" + (this.config.margin.left + this.axisLeft) + "," + (this.config.margin.top) + ")").call(this.ranges[i].axis);

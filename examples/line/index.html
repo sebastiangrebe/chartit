@@ -20,6 +20,10 @@
             grid: {
                 padding: {
                     left: 5
+                },
+                steps:{
+                    show:true,
+                    setpSize:'auto'
                 }
             },
             resizeTimeout: 0,
@@ -49,10 +53,11 @@
                 [2, 2],
                 [3, 3]
             ],
-            dot: {
+            shape: {
                 type: 'circle',
                 width: 3.5
             },
+            type:"line",
             color:"#f00000"
         }, {
             data: [
@@ -60,12 +65,13 @@
                 [1, 4],
                 [6, 3]
             ],
-            dot: {
+            shape: {
                 type: 'image',
                 image: "http://www.freeiconspng.com/uploads/circle-png-7.png",
                 width: 20,
                 height: 20
-            }
+            },
+            type:"line"
         }];
         var chart = new chartit(config);
         chart.draw(data);
