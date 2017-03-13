@@ -60,19 +60,6 @@ class chartit {
 
     draw(data) {
         var self = this;
-        if (typeof data !== typeof undefined) {
-            self.data = data;
-        }
-        self.ranges = self.getRanges();
-        this.getDimensions();
-        if (self.config.resize) {
-            this.setResizeEvent();
-        }
-        self.svg = d3.select(self.config.root).append("svg")
-            .attr("width", self.width)
-            .attr("height", self.height);
-        self.container = self.svg.append("svg:g").attr("transform", "translate(0,0)");
-        self.drawAxis();
         if (self.config.animation.show) {
             self.config.anim = d3.transition()
                 .duration(self.config.animation.time)
@@ -84,13 +71,16 @@ class chartit {
                     self.config.hooks.animateEnd(d)
                 });
         }
-        self.lines = []; 
-        if (self.config.type === 'line') {
-            for (var i = 0; i < self.data.length; i++) {
-                self.drawDataRow(i);
-            }
+        self.svg = d3.select(self.config.root).append("svg");
+        if (self.config.resize) {
+            self.setResizeEvent();
         }
-        self.drawn = true;
+        self.lines = [];
+        self.container = self.svg.append("svg:g").attr("transform", "translate(0,0)");
+
+        self.update(data);
+        
+        self.drawn=true;
     }
 
     drawDataRow(j){
@@ -298,24 +288,26 @@ class chartit {
         this.innerWidth = this.width;
         this.axisLeft = 0;
         this.axisBottom = 0;
+        var axisLeft;
+        var axisBottom;
         for (i = 0; i < this.ranges.length; i++) {
             switch (i) {
                 case 0:
-                    var axisLeft = this.config.axis[i + 1].bounding.width;
-                    var axisBottom = this.config.axis[i].bounding.height;
+                    axisLeft = this.config.axis[i + 1].bounding.width;
+                    axisBottom = this.config.axis[i].bounding.height;
                     this.axisBottom += axisBottom;
                     this.innerHeight -= axisBottom;
                     break;
                 case 1:
-                    var axisLeft = this.config.axis[i].bounding.width;
-                    var axisBottom = this.config.axis[i - 1].bounding.height;
+                    axisLeft = this.config.axis[i].bounding.width;
+                    axisBottom = this.config.axis[i - 1].bounding.height;
                     this.axisLeft += axisLeft;
                     this.innerWidth -= axisLeft;
                     break;
             }
         }
         for (i = 0; i < this.ranges.length; i++) {
-            var AxisGroup = this.config.axis[i].axisGroup;
+            AxisGroup = this.config.axis[i].axisGroup;
             switch (i) {
                 case 0:
                     this.ranges[i].axisScale = this.ranges[i].axisScale.range([this.axisLeft, this.width - (this.config.margin.left + this.axisLeft)]);
