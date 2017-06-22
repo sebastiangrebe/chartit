@@ -51,14 +51,15 @@ const DEFAULT_CONFIG = {
 
 class chartit {
 
-    data = [];
-    lines = [];
-    drawn = false;
-    axisLeft = 0;
-    axisBottom = 0;
+
 
     constructor(config) {
         this.config = mergeDeep(DEFAULT_CONFIG, config);
+        this.data = [];
+        this.lines = [];
+        this.drawn = false;
+        this.axisLeft = 0;
+        this.axisBottom = 0;
     }
 
     draw(data) {
@@ -105,8 +106,8 @@ class chartit {
         self.getDimensions();
         if (self.config.resize === true) {
             self.svg
-                .attr("width", self.widthCSS)
-                .attr("height", self.heightCSS);
+                .attr("width", "100%")
+                .attr("height", "100%");
         } else {
             self.svg
                 .attr("width", self.width)
@@ -147,14 +148,12 @@ class chartit {
         var height;
         if (self.config.width === null) {
             width = document.querySelector(self.config.root).clientWidth;
-            self.widthCSS = "100%";
         } else {
             width = self.config.width;
         }
 
         if (self.config.height === null) {
             height = document.querySelector(self.config.root).clientHeight;
-            self.heightCSS = "100%";
         } else {
             height = self.config.height;
         }
@@ -245,8 +244,10 @@ class chartit {
         var rangesLength = this.ranges.length;
         var AxisGroup;
         for (; i < rangesLength; i++) {
-            let axisScale = d3.scaleLinear();
-            let axis;
+            var axisScale = d3.scaleLinear();
+            var axis;
+            var domain;
+            var range;
             if (!this.drawn) {
                 AxisGroup = this.container.append("g");
                 this.config.axis[i].axisGroup = AxisGroup;
@@ -255,18 +256,19 @@ class chartit {
             }
             switch (i) {
                 case 0:
-                    axisScale = axisScale.domain([this.ranges[i].min, this.ranges[i].max])
-                        .range([0, this.width]);
-                    axis = d3.axisBottom().scale(axisScale);
-                    AxisGroup.attr("class", "x axis").call(axis);
+                    domain = [this.ranges[i].min, this.ranges[i].max];
+                    range = [0, this.width];
+                    axis = d3.axisBottom();
                     break;
                 case 1:
-                    axisScale = axisScale.domain([this.ranges[i].max, this.ranges[i].min])
-                        .range([0, this.height]);
-                    axis = d3.axisLeft().scale(axisScale);
-                    AxisGroup.attr("class", "y axis").call(axis);
+                    domain = [this.ranges[i].max, this.ranges[i].min];
+                    range = [0, this.height];
+                    axis = d3.axisLeft();
                     break;
             }
+            axisScale = axisScale.domain(domain).range(range);
+            axis = axis.scale(axisScale);
+            AxisGroup.attr("class", "x axis").call(axis);
             this.config.axis[i].bounding = AxisGroup._groups[0][0].getBBox();
             this.ranges[i].axisScale = axisScale;
             this.ranges[i].axis = axis;
